@@ -1,23 +1,64 @@
 import sys
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
                              QPushButton, QTabWidget, QTableWidget, QTableWidgetItem, 
-                             QLabel, QLineEdit, QGroupBox, QFormLayout, QMessageBox, QHeaderView)
+                             QLabel, QLineEdit, QGroupBox, QFormLayout, QMessageBox, QHeaderView,
+                             QDialog, QComboBox)
 from PyQt6.QtCore import Qt
 
 # Import our backend models
 from models import Library, Book, User, Admin
 
-class LibraryApp(QMainWindow):
+class LoginDialog(QDialog):
     def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Sisteme Giriş")
+        self.setFixedSize(300, 200)
+        
+        layout = QFormLayout()
+        
+        self.input_ad = QLineEdit()
+        self.input_soyad = QLineEdit()
+        
+        self.combo_role = QComboBox()
+        self.combo_role.addItems(["Öğrenci", "Admin"])
+        
+        self.btn_login = QPushButton("Giriş Yap")
+        self.btn_login.clicked.connect(self.check_login)
+        
+        layout.addRow("Adınız:", self.input_ad)
+        layout.addRow("Soyadınız:", self.input_soyad)
+        layout.addRow("Rolünüz:", self.combo_role)
+        layout.addRow(self.btn_login)
+        
+        self.setLayout(layout)
+        
+        self.user_data = {}
+        
+    def check_login(self):
+        ad = self.input_ad.text().strip()
+        soyad = self.input_soyad.text().strip()
+        role = self.combo_role.currentText()
+        
+        if not ad or not soyad:
+            QMessageBox.warning(self, "Uyarı", "Lütfen ad ve soyad alanlarını doldurun.")
+            return
+            
+        self.user_data = {"ad": ad, "soyad": soyad, "role": role}
+        self.accept()
+
+class LibraryApp(QMainWindow):
+    def __init__(self, user_data):
         super().__init__()
         self.setWindowTitle("Kütüphane Yönetim Sistemi")
         self.resize(800, 600)
         
         self.library = Library()
         
-        # Test users and books to start with (same as your notebook)
-        self.test_user = User("Ali", "Yılmaz", "12345")
-        self.test_admin = Admin("Ayşe", "Kaya", "Üst Düzey")
+        # Giriş yapan kullanıcıyı oluştur
+        if user_data["role"] == "Admin":
+            self.current_user = Admin(user_data["ad"], user_data["soyad"], "Tam Yetki")
+        else:
+            self.current_user = User(user_data["ad"], user_data["soyad"], "123456") # Varsayılan no
         
         # Sadece kütüphane boşsa örnek kitapları ekle
         if self.library.toplam_kitap == 0:
@@ -99,8 +140,8 @@ class LibraryApp(QMainWindow):
         group_add.setLayout(form_add)
         main_layout.addWidget(group_add)
         
-        # 2. DELETE BOOK
-        group_delete = QGroupBox("Admin İşlemleri: Kitap Sil")
+        # 2. DELETE BOOK (Sadece Admin görebilir)
+        self.group_delete = QGroupBox("Admin İşlemleri: Kitap Sil")
         form_delete = QHBoxLayout()
         self.input_del_ad = QLineEdit()
         self.input_del_ad.setPlaceholderText("Silinecek kitabın adını giriniz")
@@ -109,11 +150,16 @@ class LibraryApp(QMainWindow):
         btn_del.clicked.connect(self.delete_book)
         form_delete.addWidget(self.input_del_ad)
         form_delete.addWidget(btn_del)
-        group_delete.setLayout(form_delete)
-        main_layout.addWidget(group_delete)
+        self.group_delete.setLayout(form_delete)
+        main_layout.addWidget(self.group_delete)
+        
+        # Eğer giriş yapan kişi Admin değilse, Kitap Ekle ve Kitap Sil bölümlerini gizle
+        if not isinstance(self.current_user, Admin):
+            group_add.setVisible(False)
+            self.group_delete.setVisible(False)
         
         # 3. BORROW / RETURN
-        group_borrow = QGroupBox(f"Kullanıcı İşlemleri (Mevcut Kullanıcı: {self.test_user._ad} {self.test_user._soyad})")
+        group_borrow = QGroupBox(f"Kullanıcı İşlemleri (Mevcut Kullanıcı: {self.current_user._ad} {self.current_user._soyad})")
         form_borrow = QVBoxLayout()
         
         row1 = QHBoxLayout()
@@ -224,7 +270,7 @@ class LibraryApp(QMainWindow):
             return
             
         try:
-            msg = self.library.odunc_kitap_ver(ad, self.test_user)
+            msg = self.library.odunc_kitap_ver(ad, self.current_user)
             QMessageBox.information(self, "Başarılı", msg)
             self.input_borrow_ad.clear()
             self.refresh_table()
@@ -238,7 +284,7 @@ class LibraryApp(QMainWindow):
             return
             
         try:
-            msg = self.library.odunc_kitap_geri_al(ad, self.test_user)
+            msg = self.library.odunc_kitap_geri_al(ad, self.current_user)
             QMessageBox.information(self, "Başarılı", msg)
             self.input_return_ad.clear()
             self.refresh_table()
@@ -247,6 +293,9 @@ class LibraryApp(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    window = LibraryApp()
-    window.show()
-    sys.exit(app.exec())
+    
+    login = LoginDialog()
+    if login.exec() == QDialog.DialogCode.Accepted:
+        window = LibraryApp(login.user_data)
+        window.show()
+        sys.exit(app.exec())
