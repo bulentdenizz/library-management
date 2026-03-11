@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QH
                              QDialog, QComboBox)
 from PyQt6.QtCore import Qt
 
-# Import our backend models
+
 from models import Library, Book, User, Admin
 
 class LoginDialog(QDialog):
@@ -54,25 +54,25 @@ class LibraryApp(QMainWindow):
         
         self.library = Library()
         
-        # Giriş yapan kullanıcıyı oluştur
+
         if user_data["role"] == "Admin":
             self.current_user = Admin(user_data["ad"], user_data["soyad"], "Tam Yetki")
         else:
             self.current_user = User(user_data["ad"], user_data["soyad"], "123456") # Varsayılan no
         
-        # Sadece kütüphane boşsa örnek kitapları ekle
+
         if self.library.toplam_kitap == 0:
             book1 = Book("Ornek1", "OrnekY1", 100, 1999)
             book2 = Book("Ornek2", "OrnekY2", 150, 1985)
             self.library.kitap_ekle(book1)
             self.library.kitap_ekle(book2)
         
-        # Main layout wrapper
+
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
         self.layout = QVBoxLayout(self.central_widget)
         
-        # Tabs
+
         self.tabs = QTabWidget()
         self.layout.addWidget(self.tabs)
         
@@ -85,13 +85,13 @@ class LibraryApp(QMainWindow):
         self.init_inventory_tab()
         self.init_operations_tab()
         
-        # Initial refresh
+
         self.refresh_table()
         
     def init_inventory_tab(self):
         layout = QVBoxLayout()
-        
-        # Table widget setup
+
+
         self.table = QTableWidget()
         self.table.setColumnCount(5)
         self.table.setHorizontalHeaderLabels(["Kitap Adı", "Yazar", "Yıl", "Sayfa Sayısı", "Durum"])
@@ -100,12 +100,12 @@ class LibraryApp(QMainWindow):
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.setAlternatingRowColors(True)
         
-        # When user clicks a row, auto-fill the delete/borrow/return text fields
+
         self.table.itemClicked.connect(self.on_table_click)
         
         layout.addWidget(self.table)
         
-        # Refresh button
+
         self.btn_refresh = QPushButton("Listeyi Yenile")
         self.btn_refresh.setMinimumHeight(40)
         self.btn_refresh.clicked.connect(self.refresh_table)
@@ -116,7 +116,7 @@ class LibraryApp(QMainWindow):
     def init_operations_tab(self):
         main_layout = QVBoxLayout()
         
-        # 1. ADD BOOK
+
         group_add = QGroupBox("Genel İşlemler: Kitap Ekle")
         form_add = QFormLayout()
         
@@ -141,7 +141,7 @@ class LibraryApp(QMainWindow):
         group_add.setLayout(form_add)
         main_layout.addWidget(group_add)
         
-        # 2. DELETE BOOK (Sadece Admin görebilir)
+
         self.group_delete = QGroupBox("Admin İşlemleri: Kitap Sil")
         form_delete = QHBoxLayout()
         self.input_del_ad = QLineEdit()
@@ -154,12 +154,12 @@ class LibraryApp(QMainWindow):
         self.group_delete.setLayout(form_delete)
         main_layout.addWidget(self.group_delete)
         
-        # Eğer giriş yapan kişi Admin değilse, Kitap Ekle ve Kitap Sil bölümlerini gizle
+
         if not isinstance(self.current_user, Admin):
             group_add.setVisible(False)
             self.group_delete.setVisible(False)
         
-        # 3. BORROW / RETURN
+
         group_borrow = QGroupBox(f"Kullanıcı İşlemleri (Mevcut Kullanıcı: {self.current_user._ad} {self.current_user._soyad})")
         form_borrow = QVBoxLayout()
         
@@ -186,7 +186,7 @@ class LibraryApp(QMainWindow):
         group_borrow.setLayout(form_borrow)
         main_layout.addWidget(group_borrow)
         
-        main_layout.addStretch() # Push everything to top
+        main_layout.addStretch() 
         self.tab_operations.setLayout(main_layout)
         
     def refresh_table(self):
@@ -197,7 +197,7 @@ class LibraryApp(QMainWindow):
             self.table.setItem(row, 1, QTableWidgetItem(book._yazar))
             self.table.setItem(row, 2, QTableWidgetItem(str(book._yil)))
             self.table.setItem(row, 3, QTableWidgetItem(str(book._sayfa_sayisi)))
-            # Color coding for availability
+
             durum_item = QTableWidgetItem(book._durum)
             if book._durum == "Müsait":
                 durum_item.setForeground(Qt.GlobalColor.darkGreen)
@@ -206,15 +206,14 @@ class LibraryApp(QMainWindow):
             self.table.setItem(row, 4, durum_item)
             
     def on_table_click(self, item):
-        # Auto-fill selected book name into operation text boxes
+
         row = item.row()
         book_name = self.table.item(row, 0).text()
         self.input_del_ad.setText(book_name)
         self.input_borrow_ad.setText(book_name)
         self.input_return_ad.setText(book_name)
         
-        # Switch to operations tab optionally, or let user decide.
-        # self.tabs.setCurrentIndex(1)
+
             
     def add_book(self):
         ad = self.input_ad.text().strip()
@@ -295,7 +294,7 @@ class LibraryApp(QMainWindow):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     
-    # Modern QSS Tailwind-inspired temamızı yükleyelim
+
     try:
         with open("style.qss", "r", encoding="utf-8") as f:
             app.setStyleSheet(f.read())

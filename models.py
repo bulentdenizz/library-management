@@ -157,7 +157,7 @@ class Library:
         raise ValueError(f"'{kitap_adi}' adında bir kitap bulunamadı.")
 
     def listele(self):
-        # UI'da göstermek için direkt envanter listesini döndürüyoruz
+
         return self.envanter
 
     def odunc_kitap_ver(self, kitap_adi, kullanici_nesnesi):
