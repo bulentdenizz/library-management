@@ -98,6 +98,7 @@ class LibraryApp(QMainWindow):
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers) # Read only
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self.table.setAlternatingRowColors(True)
         
         # When user clicks a row, auto-fill the delete/borrow/return text fields
         self.table.itemClicked.connect(self.on_table_click)
@@ -293,6 +294,13 @@ class LibraryApp(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    
+    # Modern QSS Tailwind-inspired temamızı yükleyelim
+    try:
+        with open("style.qss", "r", encoding="utf-8") as f:
+            app.setStyleSheet(f.read())
+    except FileNotFoundError:
+        pass
     
     login = LoginDialog()
     if login.exec() == QDialog.DialogCode.Accepted:
