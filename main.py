@@ -19,10 +19,12 @@ class LibraryApp(QMainWindow):
         self.test_user = User("Ali", "Yılmaz", "12345")
         self.test_admin = Admin("Ayşe", "Kaya", "Üst Düzey")
         
-        book1 = Book("Ornek1", "OrnekY1", 100, 1999)
-        book2 = Book("Ornek2", "OrnekY2", 150, 1985)
-        self.library.kitap_ekle(book1)
-        self.library.kitap_ekle(book2)
+        # Sadece kütüphane boşsa örnek kitapları ekle
+        if self.library.toplam_kitap == 0:
+            book1 = Book("Ornek1", "OrnekY1", 100, 1999)
+            book2 = Book("Ornek2", "OrnekY2", 150, 1985)
+            self.library.kitap_ekle(book1)
+            self.library.kitap_ekle(book2)
         
         # Main layout wrapper
         self.central_widget = QWidget()
